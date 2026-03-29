@@ -40,10 +40,15 @@ internal static class SearxngResponseMapper
         var results = dto.Results?
             .Where(r => !string.IsNullOrWhiteSpace(r.Url))
             .Select(r => new SearchResult(
-                r.Title ?? string.Empty,
-                r.Url!,
-                r.Content,
-                r.Engine))
+                Title: r.Title ?? string.Empty,
+                Url: r.Url!,
+                Snippet: r.Content,
+                Engine: r.Engine,
+                Engines: r.Engines?.AsReadOnly(),
+                Score: r.Score,
+                Category: r.Category,
+                PublishedDate: TryParseDate(r.PublishedDate),
+                PrettyUrl: r.PrettyUrl))
             .ToList() ?? [];
 
         return new SearchResponse(
@@ -57,4 +62,7 @@ internal static class SearxngResponseMapper
                 ResultCount: results.Count),
             []);
     }
+
+    private static DateTimeOffset? TryParseDate(string? value) =>
+        value is not null && DateTimeOffset.TryParse(value, out var dt) ? dt : null;
 }

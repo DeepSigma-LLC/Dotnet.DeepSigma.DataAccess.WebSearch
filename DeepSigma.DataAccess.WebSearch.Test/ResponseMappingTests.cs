@@ -87,4 +87,35 @@ public class ResponseMappingTests
 
         Assert.Equal(string.Empty, response.Results[0].Title);
     }
+
+    [Fact]
+    public void Map_MapsEnrichedFieldsCorrectly()
+    {
+        var dto = new SearxngJsonResponse
+        {
+            Results =
+            [
+                new SearxngJsonResult
+                {
+                    Title = "Enriched",
+                    Url = "https://example.com",
+                    Engine = "google",
+                    Engines = ["google", "bing"],
+                    Score = 1.5,
+                    Category = "general",
+                    PublishedDate = "2024-06-01T12:00:00+00:00",
+                    PrettyUrl = "example.com"
+                }
+            ]
+        };
+
+        var response = SearxngResponseMapper.Map(dto, new SearchRequest("query"), BaseUri, TimeSpan.Zero);
+
+        var result = response.Results[0];
+        Assert.Equal(["google", "bing"], result.Engines);
+        Assert.Equal(1.5, result.Score);
+        Assert.Equal("general", result.Category);
+        Assert.Equal(new DateTimeOffset(2024, 6, 1, 12, 0, 0, TimeSpan.Zero), result.PublishedDate);
+        Assert.Equal("example.com", result.PrettyUrl);
+    }
 }

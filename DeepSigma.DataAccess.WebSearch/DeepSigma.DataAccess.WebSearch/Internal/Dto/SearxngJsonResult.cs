@@ -30,4 +30,32 @@ internal sealed class SearxngJsonResult
     /// <summary>The name of the search engine that returned this result.</summary>
     [JsonPropertyName("engine")]
     public string? Engine { get; set; }
+
+    /// <summary>
+    /// All search engines that returned this result when SearXNG de-duplicates across providers.
+    /// </summary>
+    [JsonPropertyName("engines")]
+    public List<string>? Engines { get; set; }
+
+    /// <summary>
+    /// The aggregated relevance score assigned by SearXNG, based on engine positions.
+    /// Higher values indicate higher relevance.
+    /// </summary>
+    [JsonPropertyName("score")]
+    public double? Score { get; set; }
+
+    /// <summary>The SearXNG category this result belongs to, e.g. <c>general</c> or <c>news</c>.</summary>
+    [JsonPropertyName("category")]
+    public string? Category { get; set; }
+
+    /// <summary>
+    /// The publication or last-modified date of the result page as reported by the engine,
+    /// represented as a raw string. Parsed to a <see cref="DateTimeOffset"/> during mapping.
+    /// </summary>
+    [JsonPropertyName("publishedDate")]
+    public string? PublishedDate { get; set; }
+
+    /// <summary>A human-readable, shortened form of the URL suitable for display.</summary>
+    [JsonPropertyName("pretty_url")]
+    public string? PrettyUrl { get; set; }
 }
