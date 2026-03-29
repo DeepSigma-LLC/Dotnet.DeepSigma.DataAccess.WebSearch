@@ -19,10 +19,15 @@ namespace DeepSigma.DataAccess.WebSearch.Models;
 /// <param name="ResultCount">
 /// The number of results present in the associated <see cref="SearchResponse.Results"/> collection.
 /// </param>
+/// <param name="TotalResults">
+/// The total number of results reported by SearXNG across all pages, if provided.
+/// This value typically far exceeds <see cref="ResultCount"/>, which reflects only the current page.
+/// </param>
 public sealed record SearchMetadata(
     string InstanceBaseUrl,
     string Query,
     int? Page,
     TimeSpan Duration,
     bool Partial,
-    int ResultCount);
+    int ResultCount,
+    long? TotalResults = null);

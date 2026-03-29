@@ -5,4 +5,14 @@ namespace DeepSigma.DataAccess.WebSearch.Models;
 /// such as a disabled engine or a degraded upstream provider.
 /// </summary>
 /// <param name="Message">A human-readable description of the warning condition.</param>
-public sealed record SearchWarning(string Message);
+/// <param name="Engine">
+/// The name of the engine that triggered this warning, if applicable.
+/// </param>
+/// <param name="ErrorCode">
+/// The error type reported by SearXNG for the unresponsive engine, if applicable.
+/// Common values include <c>HTTP error</c>, <c>timeout</c>, and <c>no results</c>.
+/// </param>
+public sealed record SearchWarning(
+    string Message,
+    string? Engine = null,
+    string? ErrorCode = null);

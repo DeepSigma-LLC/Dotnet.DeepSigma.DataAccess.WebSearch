@@ -48,7 +48,20 @@ internal static class SearxngResponseMapper
                 Score: r.Score,
                 Category: r.Category,
                 PublishedDate: TryParseDate(r.PublishedDate),
-                PrettyUrl: r.PrettyUrl))
+                PrettyUrl: r.PrettyUrl,
+                Template: r.Template,
+                Thumbnail: r.Thumbnail,
+                ImageUrl: r.ImageSrc,
+                Author: r.Author,
+                IframeSrc: r.IframeSrc))
+            .ToList() ?? [];
+
+        var warnings = dto.UnresponsiveEngines?
+            .Where(e => e is { Count: >= 1 })
+            .Select(e => new SearchWarning(
+                Message: e.Count >= 2 ? $"{e[0]}: {e[1]}" : e[0],
+                Engine: e[0],
+                ErrorCode: e.Count >= 2 ? e[1] : null))
             .ToList() ?? [];
 
         return new SearchResponse(
@@ -58,10 +71,17 @@ internal static class SearxngResponseMapper
                 request.Query,
                 request.Page,
                 duration,
-                Partial: false,
-                ResultCount: results.Count),
-            []);
+                Partial: warnings.Count > 0,
+                ResultCount: results.Count,
+                TotalResults: dto.NumberOfResults),
+            warnings,
+            Answers: ToReadOnly(dto.Answers),
+            Corrections: ToReadOnly(dto.Corrections),
+            Suggestions: ToReadOnly(dto.Suggestions));
     }
+
+    private static IReadOnlyList<string> ToReadOnly(List<string>? list) =>
+        list is { Count: > 0 } ? list.AsReadOnly() : [];
 
     private static DateTimeOffset? TryParseDate(string? value) =>
         value is not null && DateTimeOffset.TryParse(value, out var dt) ? dt : null;

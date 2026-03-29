@@ -30,6 +30,25 @@ namespace DeepSigma.DataAccess.WebSearch.Models;
 /// <param name="PrettyUrl">
 /// A human-readable, shortened form of the URL suitable for display, if provided by SearXNG.
 /// </param>
+/// <param name="Template">
+/// The result template type reported by SearXNG.
+/// Common values: <c>default.html</c>, <c>images.html</c>, <c>videos.html</c>,
+/// <c>torrent.html</c>, <c>map.html</c>, <c>code.html</c>.
+/// </param>
+/// <param name="Thumbnail">
+/// URL of a thumbnail image associated with the result.
+/// Typically present on image, video, and news results.
+/// </param>
+/// <param name="ImageUrl">
+/// URL of the full-size image for image search results.
+/// </param>
+/// <param name="Author">
+/// Author or byline of the result page, if reported by the engine.
+/// Typically present on news and article results.
+/// </param>
+/// <param name="IframeSrc">
+/// URL of an embeddable iframe, present on video results.
+/// </param>
 public sealed record SearchResult(
     string Title,
     string Url,
@@ -40,4 +59,9 @@ public sealed record SearchResult(
     double? Score = null,
     string? Category = null,
     DateTimeOffset? PublishedDate = null,
-    string? PrettyUrl = null);
+    string? PrettyUrl = null,
+    string? Template = null,
+    string? Thumbnail = null,
+    string? ImageUrl = null,
+    string? Author = null,
+    string? IframeSrc = null);

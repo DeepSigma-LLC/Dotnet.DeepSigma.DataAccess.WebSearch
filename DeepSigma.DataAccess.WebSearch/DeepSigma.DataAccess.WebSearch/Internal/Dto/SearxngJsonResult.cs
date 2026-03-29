@@ -58,4 +58,38 @@ internal sealed class SearxngJsonResult
     /// <summary>A human-readable, shortened form of the URL suitable for display.</summary>
     [JsonPropertyName("pretty_url")]
     public string? PrettyUrl { get; set; }
+
+    /// <summary>
+    /// The result template type that SearXNG would use to render this result.
+    /// Common values: <c>default.html</c>, <c>images.html</c>, <c>videos.html</c>,
+    /// <c>torrent.html</c>, <c>map.html</c>, <c>code.html</c>.
+    /// </summary>
+    [JsonPropertyName("template")]
+    public string? Template { get; set; }
+
+    /// <summary>
+    /// URL of a thumbnail image associated with the result.
+    /// Present on image, video, and news results.
+    /// </summary>
+    [JsonPropertyName("thumbnail")]
+    public string? Thumbnail { get; set; }
+
+    /// <summary>
+    /// URL of the full-size image for image search results.
+    /// </summary>
+    [JsonPropertyName("img_src")]
+    public string? ImageSrc { get; set; }
+
+    /// <summary>
+    /// Author or byline of the result page, if reported by the engine.
+    /// Typically present on news and article results.
+    /// </summary>
+    [JsonPropertyName("author")]
+    public string? Author { get; set; }
+
+    /// <summary>
+    /// URL of an embeddable iframe for video results.
+    /// </summary>
+    [JsonPropertyName("iframe_src")]
+    public string? IframeSrc { get; set; }
 }

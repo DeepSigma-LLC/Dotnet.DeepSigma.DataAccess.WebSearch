@@ -36,4 +36,17 @@ internal sealed class SearxngJsonResponse
     /// </summary>
     [JsonPropertyName("infoboxes")]
     public List<JsonElement>? Infoboxes { get; set; }
+
+    /// <summary>Alternative query suggestions returned by SearXNG, if any.</summary>
+    [JsonPropertyName("suggestions")]
+    public List<string>? Suggestions { get; set; }
+
+    /// <summary>
+    /// Engines that failed to respond during the search.
+    /// Each entry is a two-element list: <c>[engineName, errorType]</c>.
+    /// Used to populate <see cref="Models.SearchResponse.Warnings"/> and set
+    /// <see cref="Models.SearchMetadata.Partial"/> to <see langword="true"/>.
+    /// </summary>
+    [JsonPropertyName("unresponsive_engines")]
+    public List<List<string>>? UnresponsiveEngines { get; set; }
 }

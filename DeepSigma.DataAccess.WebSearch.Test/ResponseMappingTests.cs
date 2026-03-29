@@ -89,7 +89,78 @@ public class ResponseMappingTests
     }
 
     [Fact]
-    public void Map_MapsEnrichedFieldsCorrectly()
+    public void Map_MapsTotalResultsToMetadata()
+    {
+        var dto = new SearxngJsonResponse { Results = [], NumberOfResults = 1234 };
+
+        var response = SearxngResponseMapper.Map(dto, new SearchRequest("query"), BaseUri, TimeSpan.Zero);
+
+        Assert.Equal(1234, response.Metadata.TotalResults);
+    }
+
+    [Fact]
+    public void Map_MapsAnswersCorrectionsAndSuggestions()
+    {
+        var dto = new SearxngJsonResponse
+        {
+            Results = [],
+            Answers = ["42"],
+            Corrections = ["did you mean: hello"],
+            Suggestions = ["hello world", "hello there"]
+        };
+
+        var response = SearxngResponseMapper.Map(dto, new SearchRequest("query"), BaseUri, TimeSpan.Zero);
+
+        Assert.Equal(["42"], response.Answers);
+        Assert.Equal(["did you mean: hello"], response.Corrections);
+        Assert.Equal(["hello world", "hello there"], response.Suggestions);
+    }
+
+    [Fact]
+    public void Map_NullAnswersCorrectionsAndSuggestions_ReturnsEmptyLists()
+    {
+        var dto = new SearxngJsonResponse { Results = [] };
+
+        var response = SearxngResponseMapper.Map(dto, new SearchRequest("query"), BaseUri, TimeSpan.Zero);
+
+        Assert.Empty(response.Answers);
+        Assert.Empty(response.Corrections);
+        Assert.Empty(response.Suggestions);
+    }
+
+    [Fact]
+    public void Map_UnresponsiveEngines_SetsPartialAndPopulatesWarnings()
+    {
+        var dto = new SearxngJsonResponse
+        {
+            Results = [],
+            UnresponsiveEngines = [["google", "HTTP error"], ["bing", "timeout"]]
+        };
+
+        var response = SearxngResponseMapper.Map(dto, new SearchRequest("query"), BaseUri, TimeSpan.Zero);
+
+        Assert.True(response.Metadata.Partial);
+        Assert.Equal(2, response.Warnings.Count);
+        Assert.Equal("google", response.Warnings[0].Engine);
+        Assert.Equal("HTTP error", response.Warnings[0].ErrorCode);
+        Assert.Equal("google: HTTP error", response.Warnings[0].Message);
+        Assert.Equal("bing", response.Warnings[1].Engine);
+        Assert.Equal("timeout", response.Warnings[1].ErrorCode);
+    }
+
+    [Fact]
+    public void Map_NoUnresponsiveEngines_PartialIsFalseAndWarningsEmpty()
+    {
+        var dto = new SearxngJsonResponse { Results = [] };
+
+        var response = SearxngResponseMapper.Map(dto, new SearchRequest("query"), BaseUri, TimeSpan.Zero);
+
+        Assert.False(response.Metadata.Partial);
+        Assert.Empty(response.Warnings);
+    }
+
+    [Fact]
+    public void Map_MapsResultMediaFields()
     {
         var dto = new SearxngJsonResponse
         {
@@ -97,25 +168,24 @@ public class ResponseMappingTests
             [
                 new SearxngJsonResult
                 {
-                    Title = "Enriched",
+                    Title = "Media Result",
                     Url = "https://example.com",
-                    Engine = "google",
-                    Engines = ["google", "bing"],
-                    Score = 1.5,
-                    Category = "general",
-                    PublishedDate = "2024-06-01T12:00:00+00:00",
-                    PrettyUrl = "example.com"
+                    Template = "images.html",
+                    Thumbnail = "https://thumb.example.com/img.jpg",
+                    ImageSrc = "https://full.example.com/img.jpg",
+                    Author = "Jane Doe",
+                    IframeSrc = "https://video.example.com/embed/1"
                 }
             ]
         };
 
         var response = SearxngResponseMapper.Map(dto, new SearchRequest("query"), BaseUri, TimeSpan.Zero);
-
         var result = response.Results[0];
-        Assert.Equal(["google", "bing"], result.Engines);
-        Assert.Equal(1.5, result.Score);
-        Assert.Equal("general", result.Category);
-        Assert.Equal(new DateTimeOffset(2024, 6, 1, 12, 0, 0, TimeSpan.Zero), result.PublishedDate);
-        Assert.Equal("example.com", result.PrettyUrl);
+
+        Assert.Equal("images.html", result.Template);
+        Assert.Equal("https://thumb.example.com/img.jpg", result.Thumbnail);
+        Assert.Equal("https://full.example.com/img.jpg", result.ImageUrl);
+        Assert.Equal("Jane Doe", result.Author);
+        Assert.Equal("https://video.example.com/embed/1", result.IframeSrc);
     }
 }
