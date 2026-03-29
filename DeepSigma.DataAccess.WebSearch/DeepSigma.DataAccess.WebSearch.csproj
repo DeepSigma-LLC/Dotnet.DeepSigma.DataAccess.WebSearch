@@ -29,8 +29,4 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.5" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="DeepSigma.DataAccess.WebSearch.Test\" />
-  </ItemGroup>
-
 </Project>
