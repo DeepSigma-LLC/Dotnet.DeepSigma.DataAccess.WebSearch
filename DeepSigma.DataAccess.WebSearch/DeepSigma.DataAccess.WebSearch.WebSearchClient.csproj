@@ -6,11 +6,11 @@
     <Nullable>enable</Nullable>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Title>DeepSigma.DataAccess.WebSearch</Title>
+    <Title>DeepSigma.DataAccess.WebSearch.WebSearchClient</Title>
     <Version>1.0.2</Version>
-    <PackageProjectUrl>https://github.com/DeepSigma-LLC/Dotnet.DeepSigma.DataAccess.WebSearch</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/DeepSigma-LLC/Dotnet.DeepSigma.DataAccess.WebSearch.WebSearchClient</PackageProjectUrl>
     <Description>Donet package for web search.</Description>
-    <RepositoryUrl>https://github.com/DeepSigma-LLC/Dotnet.DeepSigma.DataAccess.WebSearch</RepositoryUrl>
+    <RepositoryUrl>https://github.com/DeepSigma-LLC/Dotnet.DeepSigma.DataAccess.WebSearch.WebSearchClient</RepositoryUrl>
     <PackageIcon>Assets\DeepSigma.png</PackageIcon>
   </PropertyGroup>
 
