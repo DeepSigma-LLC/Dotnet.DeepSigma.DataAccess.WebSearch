@@ -7,8 +7,12 @@ namespace DeepSigma.DataAccess.WebSearch.WebSearchClient.Model;
 /// <param name="URL">The URL of the extracted content.</param>
 /// <param name="ExtractedContent">The extracted content from the URL.</param>
 /// <param name="ExtractedAt">The timestamp indicating when the content was extracted.</param>
+/// <param name="Error">Indicates whether an error occurred during content extraction. Defaults to false.</param>
+/// <param name="ErrorMessage">An optional error message providing details about any error that occurred during content extraction. Defaults to null.</param>
 public record ResponseExtractedContent(
     string URL,
     string ExtractedContent,
-    DateTimeOffset ExtractedAt
+    DateTimeOffset ExtractedAt,
+    bool Error = false,
+    string? ErrorMessage = null
     );
