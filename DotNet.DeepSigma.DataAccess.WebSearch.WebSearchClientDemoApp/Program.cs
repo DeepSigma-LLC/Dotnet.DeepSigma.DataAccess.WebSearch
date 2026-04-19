@@ -3,9 +3,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
 using DeepSigma.DataAccess.WebSearch.WebSearchClient;
-using DeepSigma.DataAccess.WebSearch.WebSearchClient.Abstraction;
 using DeepSigma.DataAccess.WebSearch.UrlRetriever;
-using DeepSigma.DataAccess.WebSearch.WebSearchClient.Model;
+using DeepSigma.DataAccess.WebSearch.Abstraction;
+using DeepSigma.DataAccess.WebSearch.UrlRetriever.Models;
+using DeepSigma.DataAccess.WebSearch.Abstraction.Model;
 
 var services = new ServiceCollection();
 
@@ -23,21 +24,30 @@ services.AddSearxngClient(new SearxngOptions
 
 await using var provider = services.BuildServiceProvider();
 
-ISearxngClient searxng = provider.GetRequiredService<ISearxngClient>();
+IHtmlRetriver searxng = provider.GetRequiredService<IHtmlRetriver>();
+IContentExtractor contentExtractor = provider.GetRequiredService<IContentExtractor>();
+IUrlRetriver<SearchRequestOptions> urlRetriver = provider.GetRequiredService<IUrlRetriver<SearchRequestOptions>>();
 ILogger logger = provider.GetRequiredService<ILogger<Program>>();
-WebSearchClient webSearchClient = provider.GetRequiredService<WebSearchClient>();
+WebSearchClient<SearchRequestOptions> webSearchClient = provider.GetRequiredService<WebSearchClient<SearchRequestOptions>>();
 
 using CancellationTokenSource cts = new();
 CancellationToken ct = cts.Token;
 
-List<ResponseExtractedContent>? extractedContents = await webSearchClient.SearchAndExtract(search ?? "unknown", ct);
+SearchRequestOptions searchRequestOptions = new()
+{
+    Engines = ["google"],
+    Language = "en",
+    TimeRange = "week"
+};
+
+List<ResponseExtractedContent>? extractedContents = await webSearchClient.SearchAndExtract(search ?? "unknown", searchRequestOptions, cancellationToken: ct);
 
 if(extractedContents == null)
 {
     logger.LogWarning("No content was extracted for the query: {Query}", search);
 }
 
-foreach (var content in extractedContents ?? Enumerable.Empty<ResponseExtractedContent>())
+foreach (var content in extractedContents ?? [])
 {
     Console.WriteLine("__________________________");
     Console.WriteLine($"Title   : {content.Title}");

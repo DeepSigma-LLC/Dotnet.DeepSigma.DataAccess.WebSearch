@@ -1,5 +1,5 @@
-﻿using DeepSigma.DataAccess.WebSearch.WebSearchClient.Abstraction;
-using DeepSigma.DataAccess.WebSearch.WebSearchClient.Model;
+﻿using DeepSigma.DataAccess.WebSearch.Abstraction;
+using DeepSigma.DataAccess.WebSearch.Abstraction.Model;
 using Microsoft.Extensions.Logging;
 
 namespace DeepSigma.DataAccess.WebSearch.WebSearchClient;
@@ -8,32 +8,39 @@ namespace DeepSigma.DataAccess.WebSearch.WebSearchClient;
 /// A client that performs web searches, retrieves URLs, and extracts content from those URLs.
 /// </summary>
 /// <param name="urlRetriver">The URL retriever used to fetch URLs based on a query.</param>
+/// <param name="htmlRetriver">The HTML retriever used to fetch the HTML content of a web page.</param>
 /// <param name="contentExtractor">The content extractor used to extract content from HTML.</param>
 /// <param name="logger">The logger used to log information and errors.</param>
-public class WebSearchClient(IUrlRetriver urlRetriver, IContentExtractor contentExtractor, ILogger<WebSearchClient> logger)
+public class WebSearchClient<TSearchOptions>(
+    IUrlRetriver<TSearchOptions> urlRetriver,
+    IHtmlRetriver htmlRetriver,
+    IContentExtractor contentExtractor,
+    ILogger<WebSearchClient<TSearchOptions>> logger)
+    where TSearchOptions : class
 {
-    readonly ILogger<WebSearchClient> logger = logger;
-
-    readonly IUrlRetriver urlRetriver = urlRetriver;
-
+    readonly ILogger<WebSearchClient<TSearchOptions>> logger = logger;
+    readonly IUrlRetriver<TSearchOptions> urlRetriver = urlRetriver;
     readonly IContentExtractor contentExtractor = contentExtractor;
+    readonly IHtmlRetriver htmlRetriver = htmlRetriver;
 
     /// <summary>
     /// Searches for the given query, retrieves URLs, and extracts content from each URL.
     /// </summary>
-    /// <param name="query"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    public async Task<List<ResponseExtractedContent>?> SearchAndExtract(string query, CancellationToken cancellationToken = default)
+    /// <param name="query">The search query.</param>
+    /// <param name="searchOptions">The search options.</param>
+    /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
+    /// <returns>A list of ResponseExtractedContent objects containing the extracted content from each URL. The list will not
+    /// include entries for URLs where extraction failed or returned null.</returns>
+    public async Task<List<ResponseExtractedContent>?> SearchAndExtract(string query, TSearchOptions searchOptions, CancellationToken cancellationToken = default)
     {
         const int maxConcurrency = 8;
 
         try
         {
-            ResponseUrlRetrival response = await urlRetriver.GetUrls(query, cancellationToken);
+            List<ResponseUrlRetrival> response = await urlRetriver.SearchAsync(query, searchOptions, cancellationToken);
 
             return await ExtractAllFromURLs(
-                response.Urls,
+                response.Select(x => x.Url),
                 maxConcurrency,
                 cancellationToken);
         }
@@ -125,8 +132,8 @@ public class WebSearchClient(IUrlRetriver urlRetriver, IContentExtractor content
 
             logger.LogInformation("Processing URL: {Url}", url);
 
-            PageResponseContent html = await contentExtractor.FetchContentAsync(url, cancellationToken);
-            ResponseExtractedContent content = await contentExtractor.ExtractedContentAsync(html.HTML, cancellationToken);
+            ResponseHtmlContent responseHtmlContent = await htmlRetriver.FetchContentAsync(url, cancellationToken);
+            ResponseExtractedContent content = await contentExtractor.ExtractedContentAsync(responseHtmlContent, cancellationToken);
 
             logger.LogInformation("Extracted content from {Url}", url);
             return content;
@@ -140,11 +147,10 @@ public class WebSearchClient(IUrlRetriver urlRetriver, IContentExtractor content
         {
             logger.LogError(ex, "Failed to extract content from {Url}", url);
             return new ResponseExtractedContent(
-                URL: url,
-                ExtractedContent: string.Empty,
-                ExtractedAt: DateTimeOffset.UtcNow,
+                MainText: string.Empty,
+                Title: string.Empty,
                 Error: true,
-                ErrorMessage: ex.Message
+                ErrorMessage: [ex.Message]
             );
         }
     }
