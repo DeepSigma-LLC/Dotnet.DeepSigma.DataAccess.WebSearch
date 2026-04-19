@@ -40,7 +40,7 @@ public class WebSearchClient<TSearchOptions>(
         {
             List<ResponseUrlRetrival> response = await urlRetriever.SearchAsync(query, searchOptions, cancellationToken);
 
-            return await ExtractAllFromURLs(
+            return await ExtractAllFromUrls(
                 response.Select(x => x.Url),
                 maxConcurrency,
                 cancellationToken);
@@ -62,15 +62,15 @@ public class WebSearchClient<TSearchOptions>(
     /// operations.
     /// </summary>
     /// <remarks>The method throttles concurrent extraction tasks to avoid exceeding the specified concurrency
-    /// limit. The order of results corresponds to the order of the input URLs, excluding any URLs for which extraction
-    /// failed.</remarks>
+    /// limit. Results are returned in the same order as the input URLs; entries where extraction failed
+    /// are included with <c>Error = true</c>.</remarks>
     /// <param name="urls">A collection of URLs from which to extract content.</param>
     /// <param name="maxConcurrency">The maximum number of extraction operations to run concurrently. Must be greater than zero.</param>
     /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
     /// <returns>A list of <see cref="ResponseExtractedContent"/> objects, one per URL.
     /// Entries for URLs where extraction failed are included with <c>Error = true</c>
     /// and a non-empty <c>ErrorMessage</c>.</returns>
-    private async Task<List<ResponseExtractedContent>> ExtractAllFromURLs(
+    private async Task<List<ResponseExtractedContent>> ExtractAllFromUrls(
        IEnumerable<string> urls,
        int maxConcurrency,
        CancellationToken cancellationToken = default)
@@ -129,12 +129,12 @@ public class WebSearchClient<TSearchOptions>(
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            logger.LogInformation("Processing URL: {Url}", url);
+            logger.LogDebug("Processing URL: {Url}", url);
 
             ResponseHtmlContent responseHtmlContent = await htmlRetriever.FetchContentAsync(url, cancellationToken);
             ResponseExtractedContent content = await contentExtractor.ExtractContentAsync(responseHtmlContent, cancellationToken);
 
-            logger.LogInformation("Extracted content from {Url}", url);
+            logger.LogDebug("Extracted content from {Url}", url);
             return content;
         }
         catch (OperationCanceledException)

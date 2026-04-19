@@ -9,9 +9,10 @@
     <Title>DeepSigma.DataAccess.WebSearch.WebSearchClient</Title>
     <Version>1.0.2</Version>
     <PackageProjectUrl>https://github.com/DeepSigma-LLC/Dotnet.DeepSigma.DataAccess.WebSearch.WebSearchClient</PackageProjectUrl>
-    <Description>Donet package for web search.</Description>
+    <Description>.NET orchestrator that turns a search query into structured page content — retrieves URLs, fetches HTML in parallel, and extracts structured content.</Description>
     <RepositoryUrl>https://github.com/DeepSigma-LLC/Dotnet.DeepSigma.DataAccess.WebSearch.WebSearchClient</RepositoryUrl>
     <PackageIcon>Assets\DeepSigma.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,6 +21,7 @@
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>

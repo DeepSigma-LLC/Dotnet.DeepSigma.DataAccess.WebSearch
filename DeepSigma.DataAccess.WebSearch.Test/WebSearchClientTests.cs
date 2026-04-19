@@ -51,6 +51,31 @@ public class WebSearchClientTests
     }
 
     // Throws on the Nth call; all others succeed. Use maxConcurrency=1 for determinism.
+    sealed class ThrowingOnNthCallHtmlRetriever(int failOnCall) : IHtmlRetriever
+    {
+        int _calls;
+
+        public Task<ResponseHtmlContent> FetchContentAsync(
+            string url, CancellationToken cancellationToken)
+        {
+            if (Interlocked.Increment(ref _calls) == failOnCall)
+                throw new HttpRequestException("Fetch failed");
+            return Task.FromResult(HtmlContentFor(url));
+        }
+
+        public Task<ResponseHtmlContent> FetchContentAsync(
+            ResponseUrlRetrival responseUrl, CancellationToken cancellationToken)
+            => FetchContentAsync(responseUrl.Url, cancellationToken);
+
+        static ResponseHtmlContent HtmlContentFor(string url) => new(
+            Url: url, Html: "<html/>",
+            FetchedAt: DateTimeOffset.UtcNow,
+            StatusCode: HttpStatusCode.OK,
+            ContentType: "", Title: "", Byline: "", Excerpt: "", Language: "",
+            SourceUrlRetrival: null!, Error: false, ErrorMessage: []);
+    }
+
+    // Throws on the Nth call; all others succeed. Use maxConcurrency=1 for determinism.
     sealed class ThrowingOnNthCallContentExtractor(int failOnCall) : IContentExtractor
     {
         int _calls;
@@ -140,6 +165,27 @@ public class WebSearchClientTests
                 UrlResult("https://c.com")]),
             new FakeHtmlRetriever(HtmlContent),
             new ThrowingOnNthCallContentExtractor(failOnCall: 2));
+
+        var result = await client.SearchAndExtract("query", new TestOptions(), maxConcurrency: 1, cancellationToken: CancellationToken.None);
+
+        Assert.NotNull(result);
+        Assert.Equal(3, result.Count);
+        Assert.Equal(1, result.Count(r => r.Error));
+        Assert.Equal(2, result.Count(r => !r.Error));
+        Assert.NotEmpty(result.Single(r => r.Error).ErrorMessage);
+    }
+
+    [Fact]
+    public async Task SearchAndExtract_OneHtmlFetchFails_FailedEntryHasErrorAndRemainingSucceed()
+    {
+        // maxConcurrency=1 makes calls sequential so failOnCall=2 reliably targets the second URL
+        var client = CreateClient(
+            new FakeUrlRetriever([
+                UrlResult("https://a.com"),
+                UrlResult("https://b.com"),
+                UrlResult("https://c.com")]),
+            new ThrowingOnNthCallHtmlRetriever(failOnCall: 2),
+            new FakeContentExtractor(_ => GoodContent()));
 
         var result = await client.SearchAndExtract("query", new TestOptions(), maxConcurrency: 1, cancellationToken: CancellationToken.None);
 
