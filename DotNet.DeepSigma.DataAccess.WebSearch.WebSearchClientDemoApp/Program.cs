@@ -1,5 +1,4 @@
-﻿using DeepSigma.DataAccess.WebSearch;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
 using DeepSigma.DataAccess.WebSearch.WebSearchClient;
@@ -7,27 +6,24 @@ using DeepSigma.DataAccess.WebSearch.UrlRetriever;
 using DeepSigma.DataAccess.WebSearch.Abstraction;
 using DeepSigma.DataAccess.WebSearch.UrlRetriever.Models;
 using DeepSigma.DataAccess.WebSearch.Abstraction.Model;
+using DeepSigma.DataAccess.WebSearch.ContentExtraction.Extensions;
 
 var services = new ServiceCollection();
 
-Console.WriteLine("Enter search query:");
-string? search = Console.ReadLine();
-
 services.AddLogging(b => b.AddConsole());
-
 services.AddSearxngClient(new SearxngOptions
 {
     BaseUri = new Uri("http://localhost:8080"),
     Timeout = TimeSpan.FromSeconds(10),
     UserAgent = "MyApp/1.0"
 });
+services.AddWebPageDataExtraction();
 
 await using var provider = services.BuildServiceProvider();
-
-IHtmlRetriver searxng = provider.GetRequiredService<IHtmlRetriver>();
-IContentExtractor contentExtractor = provider.GetRequiredService<IContentExtractor>();
-IUrlRetriver<SearchRequestOptions> urlRetriver = provider.GetRequiredService<IUrlRetriver<SearchRequestOptions>>();
 ILogger logger = provider.GetRequiredService<ILogger<Program>>();
+IUrlRetriver<SearchRequestOptions> urlRetriver = provider.GetRequiredService<IUrlRetriver<SearchRequestOptions>>();
+IContentExtractor contentExtractor = provider.GetRequiredService<IContentExtractor>();
+IHtmlRetriver searxng = provider.GetRequiredService<IHtmlRetriver>();
 WebSearchClient<SearchRequestOptions> webSearchClient = provider.GetRequiredService<WebSearchClient<SearchRequestOptions>>();
 
 using CancellationTokenSource cts = new();
@@ -40,6 +36,8 @@ SearchRequestOptions searchRequestOptions = new()
     TimeRange = "week"
 };
 
+Console.WriteLine("Enter search query:");
+string? search = Console.ReadLine();
 List<ResponseExtractedContent>? extractedContents = await webSearchClient.SearchAndExtract(search ?? "unknown", searchRequestOptions, cancellationToken: ct);
 
 if(extractedContents == null)
