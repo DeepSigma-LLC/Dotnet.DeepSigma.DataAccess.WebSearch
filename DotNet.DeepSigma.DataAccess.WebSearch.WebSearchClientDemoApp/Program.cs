@@ -48,7 +48,7 @@ foreach (var content in extractedContents ?? [])
     Console.WriteLine("__________________________");
     if (content.Error)
     {
-        Console.WriteLine($"ERROR: {string.Join("; ", content.ErrorMessage)}");
+        Console.WriteLine($"ERROR: {string.Join("; ", content.ErrorMessage ?? [])}");
     }
     else
     {
