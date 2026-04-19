@@ -208,7 +208,6 @@ This exposes SearXNG at `http://localhost:8080` with `json` added to `search.for
 ## Known Issues
 
 - The `IUrlRetriver` interface name in the upstream `Abstraction` package is misspelled (missing an `e`). Fixing it is a breaking change and must happen in that package; this repo uses the spelling as-published.
-- The `DeepSigma.DataAccess.WebSearch.Test` project currently contains no tests.
 
 ---
 

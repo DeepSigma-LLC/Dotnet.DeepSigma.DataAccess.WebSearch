@@ -30,10 +30,12 @@ public class WebSearchClient<TSearchOptions>(
     /// <param name="searchOptions">The search options.</param>
     /// <param name="maxConcurrency">The maximum number of URLs to extract concurrently. Must be greater than zero. Defaults to 8.</param>
     /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
-    /// <returns>A list of ResponseExtractedContent objects containing the extracted content from each URL. The list will not
-    /// include entries for URLs where extraction failed or returned null.</returns>
+    /// <returns>A list of <see cref="ResponseExtractedContent"/> objects, one per URL.
+    /// Entries for URLs where extraction failed are included with <c>Error = true</c>
+    /// and a non-empty <c>ErrorMessage</c>.</returns>
     public async Task<List<ResponseExtractedContent>?> SearchAndExtract(string query, TSearchOptions searchOptions, int maxConcurrency = 8, CancellationToken cancellationToken = default)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxConcurrency);
         try
         {
             List<ResponseUrlRetrival> response = await urlRetriver.SearchAsync(query, searchOptions, cancellationToken);
@@ -65,8 +67,9 @@ public class WebSearchClient<TSearchOptions>(
     /// <param name="urls">A collection of URLs from which to extract content.</param>
     /// <param name="maxConcurrency">The maximum number of extraction operations to run concurrently. Must be greater than zero.</param>
     /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
-    /// <returns>A list of ResponseExtractedContent objects containing the extracted content from each URL. The list will not
-    /// include entries for URLs where extraction failed or returned null.</returns>
+    /// <returns>A list of <see cref="ResponseExtractedContent"/> objects, one per URL.
+    /// Entries for URLs where extraction failed are included with <c>Error = true</c>
+    /// and a non-empty <c>ErrorMessage</c>.</returns>
     private async Task<List<ResponseExtractedContent>> ExtractAllFromURLs(
        IEnumerable<string> urls,
        int maxConcurrency,
@@ -74,16 +77,13 @@ public class WebSearchClient<TSearchOptions>(
     {
         using var semaphore = new SemaphoreSlim(maxConcurrency);
 
-        Task<ResponseExtractedContent?>[] tasks = urls
+        Task<ResponseExtractedContent>[] tasks = urls
             .Select(url => ExtractSingleUrlWithThrottle(url, semaphore, cancellationToken))
             .ToArray();
 
-        ResponseExtractedContent?[] results = await Task.WhenAll(tasks);
+        ResponseExtractedContent[] results = await Task.WhenAll(tasks);
 
-        return results
-            .Where(r => r is not null)
-            .Select(r => r!)
-            .ToList();
+        return results.ToList();
     }
 
     /// <summary>
@@ -94,9 +94,9 @@ public class WebSearchClient<TSearchOptions>(
     /// <param name="url">The URL from which to extract content. Cannot be null or empty.</param>
     /// <param name="semaphore">A SemaphoreSlim instance used to limit concurrent extraction operations. Must not be null.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests. The operation is canceled if the token is triggered.</param>
-    /// <returns>A task that represents the asynchronous extraction operation. The task result contains the extracted content, or
-    /// null if extraction fails.</returns>
-    private async Task<ResponseExtractedContent?> ExtractSingleUrlWithThrottle(
+    /// <returns>A task that represents the asynchronous extraction operation. The task result contains the extracted content,
+    /// or an error result with <c>Error = true</c> if extraction fails.</returns>
+    private async Task<ResponseExtractedContent> ExtractSingleUrlWithThrottle(
         string url,
         SemaphoreSlim semaphore,
         CancellationToken cancellationToken)
@@ -123,7 +123,7 @@ public class WebSearchClient<TSearchOptions>(
     /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a ResponseExtractedContent object
     /// with the extracted content, or an error result if extraction fails.</returns>
-    private async Task<ResponseExtractedContent?> ExtractSingleUrl(string url, CancellationToken cancellationToken)
+    private async Task<ResponseExtractedContent> ExtractSingleUrl(string url, CancellationToken cancellationToken)
     {
         try
         {

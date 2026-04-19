@@ -50,11 +50,18 @@ if(extractedContents == null)
 foreach (var content in extractedContents ?? [])
 {
     Console.WriteLine("__________________________");
-    Console.WriteLine($"Title   : {content.Title}");
-    Console.WriteLine($"Byline  : {content.Byline}");
-    Console.WriteLine($"Language: {content.Language}");
-    Console.WriteLine($"Date    : {content.PublishedAt}");
-    Console.WriteLine(content.MainText);
+    if (content.Error)
+    {
+        Console.WriteLine($"ERROR: {string.Join("; ", content.ErrorMessage)}");
+    }
+    else
+    {
+        Console.WriteLine($"Title   : {content.Title}");
+        Console.WriteLine($"Byline  : {content.Byline}");
+        Console.WriteLine($"Language: {content.Language}");
+        Console.WriteLine($"Date    : {content.PublishedAt}");
+        Console.WriteLine(content.MainText);
+    }
     Console.WriteLine("__________________________");
     Console.WriteLine();
 }
