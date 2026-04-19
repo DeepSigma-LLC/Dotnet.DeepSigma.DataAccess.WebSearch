@@ -172,7 +172,7 @@ public class WebSearchClientTests
         Assert.Equal(3, result.Count);
         Assert.Equal(1, result.Count(r => r.Error));
         Assert.Equal(2, result.Count(r => !r.Error));
-        Assert.NotEmpty(result.Single(r => r.Error).ErrorMessage);
+        Assert.NotEmpty(result.Single(r => r.Error).ErrorMessage ?? []);
     }
 
     [Fact]
@@ -193,7 +193,7 @@ public class WebSearchClientTests
         Assert.Equal(3, result.Count);
         Assert.Equal(1, result.Count(r => r.Error));
         Assert.Equal(2, result.Count(r => !r.Error));
-        Assert.NotEmpty(result.Single(r => r.Error).ErrorMessage);
+        Assert.NotEmpty(result.Single(r => r.Error).ErrorMessage ?? []);
     }
 
     [Fact]
