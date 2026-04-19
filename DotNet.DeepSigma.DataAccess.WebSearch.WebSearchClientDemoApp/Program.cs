@@ -18,8 +18,10 @@ services.AddSearxngClient(new SearxngOptions
     UserAgent = "MyApp/1.0"
 });
 services.AddWebPageDataExtraction();
+services.AddSingleton<WebSearchClient<SearchRequestOptions>>();
 
 await using var provider = services.BuildServiceProvider();
+
 ILogger logger = provider.GetRequiredService<ILogger<Program>>();
 IUrlRetriver<SearchRequestOptions> urlRetriver = provider.GetRequiredService<IUrlRetriver<SearchRequestOptions>>();
 IContentExtractor contentExtractor = provider.GetRequiredService<IContentExtractor>();
