@@ -76,8 +76,10 @@ foreach (var content in results ?? [])
         Console.WriteLine($"Byline: {content.Byline}");
         Console.WriteLine($"Language: {content.Language}");
         Console.WriteLine($"Extracted Published Date: {content.PublishedAt}");
+        Console.WriteLine($"Excerpt: {content.Snippet}");
+        Console.WriteLine($"Parsed URLs: {string.Join(", ", content.ParsedUrls ?? [])}");
         Console.WriteLine($"Text len: {content.MainText?.Length ?? 0}");
-        Console.WriteLine(content.MainText?[..Math.Min(content.MainText.Length, 500)]);
+        Console.WriteLine("Extracted Text:" + content.MainText?[..Math.Min(content.MainText.Length, 500)]);
     }
     Console.WriteLine("__________________________");
     Console.WriteLine();
