@@ -42,12 +42,8 @@ public class WebSearchClientTests
         Func<ResponseHtmlContent, ResponseExtractedContent> factory) : IContentExtractor
     {
         public Task<ResponseExtractedContent> ExtractContentAsync(
-            ResponseHtmlContent htmlContent, CancellationToken cancellationToken)
+            ResponseHtmlContent htmlContent, ResponseUrlRetrival urlRetrival, CancellationToken cancellationToken)
             => Task.FromResult(factory(htmlContent));
-
-        public Task<ResponseExtractedContent> ExtractContentAsync(
-            string html, string? url, CancellationToken cancellationToken)
-            => throw new NotSupportedException();
     }
 
     // Throws on the Nth call; all others succeed. Use maxConcurrency=1 for determinism.
@@ -68,11 +64,11 @@ public class WebSearchClientTests
             => FetchContentAsync(responseUrl.Url, cancellationToken);
 
         static ResponseHtmlContent HtmlContentFor(string url) => new(
-            Url: url, Html: "<html/>",
+            Html: "<html/>",
             FetchedAt: DateTimeOffset.UtcNow,
             StatusCode: HttpStatusCode.OK,
-            ContentType: "", Title: "", Byline: "", Excerpt: "", Language: "",
-            SourceUrlRetrival: null!, Error: false, ErrorMessage: []);
+            ContentType: "", Title: "", Excerpt: "", Language: "",
+            Error: false, ErrorMessage: []);
     }
 
     // Throws on the Nth call; all others succeed. Use maxConcurrency=1 for determinism.
@@ -81,16 +77,12 @@ public class WebSearchClientTests
         int _calls;
 
         public Task<ResponseExtractedContent> ExtractContentAsync(
-            ResponseHtmlContent htmlContent, CancellationToken cancellationToken)
+            ResponseHtmlContent htmlContent, ResponseUrlRetrival urlRetrival, CancellationToken cancellationToken)
         {
             if (Interlocked.Increment(ref _calls) == failOnCall)
                 throw new InvalidOperationException("Extraction failed");
             return Task.FromResult(GoodContent());
         }
-
-        public Task<ResponseExtractedContent> ExtractContentAsync(
-            string html, string? url, CancellationToken cancellationToken)
-            => throw new NotSupportedException();
     }
 
     // ── Model helpers ─────────────────────────────────────────────────────────
@@ -104,18 +96,19 @@ public class WebSearchClientTests
         Error: false, ErrorMessage: []);
 
     static ResponseHtmlContent HtmlContent(string url) => new(
-        Url: url, Html: "<html/>",
+        Html: "<html/>",
         FetchedAt: DateTimeOffset.UtcNow,
         StatusCode: HttpStatusCode.OK,
-        ContentType: "", Title: "", Byline: "", Excerpt: "", Language: "",
-        SourceUrlRetrival: null!, Error: false, ErrorMessage: []);
+        ContentType: "", Title: "", Excerpt: "", Language: "",
+        Error: false, ErrorMessage: []);
 
     static ResponseExtractedContent GoodContent() => new(
+        SourceUrlRetrival: null!, SourceHtmlContent: null!,
         MainText: "content", Title: "title",
-        Language: null, Snippet: null, Byline: null, Summary: null,
+        Byline: null, Language: null, Summary: null, Snippet: null,
         PublishedAt: null, ParsedUrls: null, Category: null, PrettyUrl: null,
         Template: null, Thumbnail: null, ImageUrl: null, Author: null,
-        SourceHtmlContent: null!, Error: false, ErrorMessage: []);
+        Error: false, ErrorMessage: []);
 
     static WebSearchClient<TestOptions> CreateClient(
         IUrlRetriever<TestOptions> urlRetriever,

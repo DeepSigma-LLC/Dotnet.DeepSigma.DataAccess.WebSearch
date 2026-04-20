@@ -41,7 +41,7 @@ public class WebSearchClient<TSearchOptions>(
             List<ResponseUrlRetrival> response = await urlRetriever.SearchAsync(query, searchOptions, cancellationToken);
 
             return await ExtractAllFromUrls(
-                response.Select(x => x.Url),
+                response,
                 maxConcurrency,
                 cancellationToken);
         }
@@ -71,7 +71,7 @@ public class WebSearchClient<TSearchOptions>(
     /// Entries for URLs where extraction failed are included with <c>Error = true</c>
     /// and a non-empty <c>ErrorMessage</c>.</returns>
     private async Task<List<ResponseExtractedContent>> ExtractAllFromUrls(
-       IEnumerable<string> urls,
+       IEnumerable<ResponseUrlRetrival> urls,
        int maxConcurrency,
        CancellationToken cancellationToken = default)
     {
@@ -97,7 +97,7 @@ public class WebSearchClient<TSearchOptions>(
     /// <returns>A task that represents the asynchronous extraction operation. The task result contains the extracted content,
     /// or an error result with <c>Error = true</c> if extraction fails.</returns>
     private async Task<ResponseExtractedContent> ExtractSingleUrlWithThrottle(
-        string url,
+        ResponseUrlRetrival url,
         SemaphoreSlim semaphore,
         CancellationToken cancellationToken)
     {
@@ -113,34 +113,32 @@ public class WebSearchClient<TSearchOptions>(
         }
     }
 
-    /// <summary>
-    /// Asynchronously extracts structured content from the specified URL.
-    /// </summary>
-    /// <remarks>If an error occurs during extraction, the returned ResponseExtractedContent will indicate the
-    /// error and include an error message. If the operation is canceled, an OperationCanceledException is
-    /// thrown.</remarks>
-    /// <param name="url">The URL of the web page to extract content from. Must be a valid, absolute URL.</param>
-    /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
-    /// <returns>A task that represents the asynchronous operation. The task result contains a ResponseExtractedContent object
-    /// with the extracted content, or an error result if extraction fails.</returns>
-    private async Task<ResponseExtractedContent> ExtractSingleUrl(string url, CancellationToken cancellationToken)
+    private async Task<ResponseExtractedContent> ExtractSingleUrl(ResponseUrlRetrival responseUrl, CancellationToken cancellationToken)
     {
         try
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            logger.LogDebug("Processing URL: {Url}", url);
+            logger.LogDebug("Processing URL: {Url}", responseUrl.Url);
 
-            ResponseHtmlContent responseHtmlContent = await htmlRetriever.FetchContentAsync(url, cancellationToken);
-            ResponseExtractedContent content = await contentExtractor.ExtractContentAsync(responseHtmlContent, cancellationToken);
+            ResponseHtmlContent responseHtmlContent = await htmlRetriever.FetchContentAsync(responseUrl, cancellationToken);
+            ResponseExtractedContent content = await contentExtractor.ExtractContentAsync(responseHtmlContent, responseUrl, cancellationToken);
 
-            logger.LogDebug("Extracted content from {Url}", url);
+            logger.LogDebug("Extracted content from {Url}", responseUrl.Url);
             return content;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            logger.LogError(ex, "Failed to extract content from {Url}", url);
+            logger.LogError(ex, "Failed to extract content from {Url}", responseUrl.Url);
             return new ResponseExtractedContent(
+                SourceUrlRetrival: responseUrl,
+                SourceHtmlContent: new ResponseHtmlContent(
+                    Html: string.Empty,
+                    FetchedAt: DateTimeOffset.UtcNow,
+                    StatusCode: System.Net.HttpStatusCode.BadRequest,
+                    Error: true,
+                    ErrorMessage: [ex.Message]
+                ),
                 MainText: string.Empty,
                 Title: string.Empty,
                 Language: null,
@@ -155,7 +153,6 @@ public class WebSearchClient<TSearchOptions>(
                 Thumbnail: null,
                 ImageUrl: null,
                 Author: null,
-                SourceHtmlContent: null!,
                 Error: true,
                 ErrorMessage: [ex.Message]
             );

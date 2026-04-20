@@ -49,7 +49,7 @@ Console.WriteLine("\n=== Step 1: URL Retrieval ===");
 Console.WriteLine($"URLs found: {results?.Count ?? 0}");
 foreach (var result in results ?? [])
 {
-    Console.WriteLine($"  - {result.SourceHtmlContent?.Url}");
+    Console.WriteLine($"  - {result.SourceUrlRetrival.Url}");
 }
 
 if (results is null || results.Count == 0)
@@ -68,11 +68,11 @@ foreach (var content in results ?? [])
     }
     else
     {
-        Console.WriteLine($"$Url: {content.SourceHtmlContent?.Url}");
+        Console.WriteLine($"$Url: {content.SourceUrlRetrival.Url}");
         Console.WriteLine($"Title: {content.Title}");
-        Console.WriteLine($"Search Engine: {content.SourceHtmlContent?.SourceUrlRetrival?.SearchEngine}");
-        Console.WriteLine($"Relevance Score: {content.SourceHtmlContent?.SourceUrlRetrival?.EngineRelevanceScore}");
-        Console.WriteLine($"Publish Date From Search Engine: {content.SourceHtmlContent?.SourceUrlRetrival?.PublishedDate}");
+        Console.WriteLine($"Search Engine: {content.SourceUrlRetrival.SearchEngine}");
+        Console.WriteLine($"Relevance Score: {content.SourceUrlRetrival.EngineRelevanceScore}");
+        Console.WriteLine($"Publish Date From Search Engine: {content.SourceUrlRetrival.PublishedDate}");
         Console.WriteLine($"Byline: {content.Byline}");
         Console.WriteLine($"Language: {content.Language}");
         Console.WriteLine($"Extracted Published Date: {content.PublishedAt}");
