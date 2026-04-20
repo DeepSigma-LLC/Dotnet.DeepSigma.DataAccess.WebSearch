@@ -33,9 +33,10 @@ CancellationToken ct = cts.Token;
 
 SearchRequestOptions searchRequestOptions = new()
 {
-    Engines = ["duckduckgo", "brave", "bing"],
     Language = "en",
-    TimeRange = "day"
+    //Engines = ["duckduckgo", "brave", "bing"],
+    //TimeRange = "day"
+    //Page = 2
 };
 
 Console.WriteLine("Enter search query:");

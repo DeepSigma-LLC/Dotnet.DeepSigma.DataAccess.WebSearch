@@ -202,6 +202,18 @@ docker compose up
 
 This exposes SearXNG at `http://localhost:8080` with `json` added to `search.formats`, matching the `BaseUri` in the quick-start example.
 
+### Docker Compose Configuration
+
+![SearXNG Docker Compose Example](DeepSigma.DataAccess.WebSearch/Assets/Readme/SearXNG-Docker-Compose-Example.png)
+
+### SearXNG Running in Docker
+
+![SearXNG Running in Docker](DeepSigma.DataAccess.WebSearch/Assets/Readme/SearXNG-Running-In-Docker.png)
+
+### SearXNG Browser Instance
+
+![SearXNG Browser Instance](DeepSigma.DataAccess.WebSearch/Assets/Readme/SearXNG-Browser-Instance.png)
+
 ---
 
 ## License
